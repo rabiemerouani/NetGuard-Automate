@@ -1,0 +1,29 @@
+[
+    {
+        "id": "CIS-1.1",
+        "name": "Désactivation du serveur HTTP",
+        "severity": "MOYENNE",
+        "parent": "",
+        "search_command": "ip http server",
+        "expected": "absent",
+        "fix": "no ip http server"
+    },
+    {
+        "id": "CIS-2.1",
+        "name": "Chiffrement global des mots de passe",
+        "severity": "ÉLEVÉE",
+        "parent": "",
+        "search_command": "service password-encryption",
+        "expected": "present",
+        "fix": "service password-encryption"
+    },
+    {
+        "id": "CIS-3.1",
+        "name": "Interdiction de Telnet (VTY)",
+        "severity": "CRITIQUE",
+        "parent": "line vty",
+        "search_command": "transport input telnet",
+        "expected": "absent",
+        "fix": "transport input ssh"
+    }
+]
