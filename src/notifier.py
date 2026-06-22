@@ -1,56 +1,66 @@
+import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+
+# Charger les variables du fichier .env au démarrage du script
+load_dotenv()
 
 def send_security_alert(device_name, vulnerabilities):
-    """Envoie un rapport d'audit par e-mail si des failles sont détectées."""
+    """Génère et envoie une alerte e-mail basée sur les vulnérabilités trouvées."""
     
-    # 1. Configuration du serveur SMTP (Exemple avec Gmail)
-    #  Pour tester, il faudra remplacer par tes vraies informations ou un serveur de test
-    SMTP_SERVER = "smtp.gmail.com"
-    SMTP_PORT = 587
-    SENDER_EMAIL = "merouani1706@gmail.com"
-    SENDER_PASSWORD = "zwyo ybbd bzwn icrn"  # Ce n'est pas ton vrai mot de passe, mais un jeton généré par Google
-    RECEIVER_EMAIL = "merouani1706@gmail.com"
+    # 🛠️ Récupération des variables depuis le fichier .env
+    sender_email = os.getenv("SMTP_SENDER")
+    password = os.getenv("SMTP_PASSWORD")
+    receiver_email = os.getenv("SMTP_RECEIVER")
 
-    # 2. Construction du corps du mail en fonction des failles
-    subject = f"[NetGuard Alerte] Vulnérabilités critiques détectées sur {device_name}"
+    # Vérification de sécurité : si une variable manque dans le .env, on arrête tout
+    if not sender_email or not password or not receiver_email:
+        print(" [SMTP] Erreur : Configuration SMTP incomplète dans le fichier .env")
+        return
+
+    print(f"[SMTP] Connexion au serveur smtp.gmail.com...")
     
-    body = f"Bonjour de NetGuard-Automate,\n\n"
+    #  1. Création de l'e-mail (Structure de base)
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = f" ALERTE SÉCURITÉ : Faille détectée sur {device_name}"
+
+    # ✍️ 2. Construction du corps du texte de l'e-mail
+    body = f"Salut,\n\n"
     body += f"Un audit de sécurité automatique a été effectué sur l'équipement : {device_name}\n"
     body += f"Status : ATTENTION - Des failles de sécurité ont été trouvées.\n"
-    body += "=" * 60 + "\n\n"
+    body += "============================================================\n\n"
 
     for vuln in vulnerabilities:
         body += f"[{vuln['severity']}] {vuln['issue']}\n"
         body += f"   Détails : {vuln['details']}\n"
         body += f"   Correction suggérée : {vuln['fix']}\n"
-        body += "-" * 40 + "\n"
+        body += "----------------------------------------\n"
 
-    body += "\nMerci de traiter ces vulnérabilités dès que possible.\n"
-    body += "Cordialement,\nVotre robot de supervision NetGuard."
+    body += f"\nMerci de traiter ces vulnérabilités dès que possible.\n"
+    body += f"Cordialement,\n"
+    body += f"Votre robot de supervision NetGuard."
 
-    # 3. Création de l'objet Message (Format MIME standard)
-    msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = RECEIVER_EMAIL
-    msg['Subject'] = subject
+    # Attacher le texte à l'objet e-mail
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-    # 4. Connexion au serveur et envoi de l'e-mail
+    # 3. Connexion au serveur de Google et envoi réel
     try:
-        print(f"[SMTP] Connexion au serveur {SMTP_SERVER}...")
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()  # Sécurise la connexion avec TLS (Chiffrement)
+        # Connexion sur le port sécurisé TLS (587)
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()  # Chiffrement de la connexion
         
-        print("[SMTP] Authentification...")
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        print("[SMTP] Authentification sécurisée...")
+        server.login(sender_email, password)
         
-        print(f"[SMTP] Envoi de l'alerte à {RECEIVER_EMAIL}...")
-        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+        print(f"[SMTP] Envoi de l'alerte à {receiver_email}...")
+        server.sendmail(sender_email, receiver_email, msg.as_string())
         
-        print("[✔] [SMTP] E-mail d'alerte envoyé avec succès !")
+        print(" [SMTP] E-mail d'alerte envoyé avec succès !")
         server.quit()
         
     except Exception as e:
-        print(f"Erreur SMTP : Impossible d'envoyer l'e-mail. Détails : {e}")
+        print(f"[SMTP] Échec de l'envoi de l'e-mail. Erreur : {e}")
