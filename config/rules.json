@@ -1,29 +1,112 @@
 [
-    {
-        "id": "CIS-1.1",
-        "name": "Désactivation du serveur HTTP",
-        "severity": "MOYENNE",
-        "parent": "",
-        "search_command": "ip http server",
-        "expected": "absent",
-        "fix": "no ip http server"
-    },
-    {
-        "id": "CIS-2.1",
-        "name": "Chiffrement global des mots de passe",
-        "severity": "ÉLEVÉE",
-        "parent": "",
-        "search_command": "service password-encryption",
-        "expected": "present",
-        "fix": "service password-encryption"
-    },
-    {
-        "id": "CIS-3.1",
-        "name": "Interdiction de Telnet (VTY)",
-        "severity": "CRITIQUE",
-        "parent": "line vty",
-        "search_command": "transport input telnet",
-        "expected": "absent",
-        "fix": "transport input ssh"
-    }
+  {
+    "id": "CIS-1.1",
+    "name": "Désactivation du serveur HTTP",
+    "category": "Services",
+    "level": 1,
+    "severity": "HIGH",
+    "parent": "",
+    "search_command": "ip http server",
+    "expected": "absent",
+    "fix": "no ip http server"
+  },
+  {
+    "id": "CIS-1.2",
+    "name": "Désactivation du serveur HTTPS",
+    "category": "Services",
+    "level": 1,
+    "severity": "MEDIUM",
+    "parent": "",
+    "search_command": "ip http secure-server",
+    "expected": "absent",
+    "fix": "no ip http secure-server"
+  },
+  {
+    "id": "CIS-2.1",
+    "name": "Chiffrement global des mots de passe",
+    "category": "Authentication",
+    "level": 1,
+    "severity": "HIGH",
+    "parent": "",
+    "search_command": "service password-encryption",
+    "expected": "present",
+    "fix": "service password-encryption"
+  },
+  {
+    "id": "CIS-3.1",
+    "name": "Interdiction du protocole non chiffré Telnet (VTY)",
+    "category": "Management",
+    "level": 1,
+    "severity": "CRITICAL",
+    "parent": "line vty",
+    "search_command": "transport input.*telnet",
+    "expected": "absent",
+    "fix": "Sous line vty, appliquer: transport input ssh"
+  },
+  {
+    "id": "CIS-3.2",
+    "name": "Configuration d'un timeout de déconnexion VTY valide (Pas de 0 0)",
+    "category": "Management",
+    "level": 1,
+    "severity": "HIGH",
+    "parent": "line vty",
+    "search_command": "exec-timeout [1-9]",
+    "expected": "present",
+    "fix": "Sous line vty, appliquer: exec-timeout 5 0"
+  },
+  {
+    "id": "CIS-3.3",
+    "name": "Configuration d'un timeout de déconnexion Console valide (Pas de 0 0)",
+    "category": "Management",
+    "level": 1,
+    "severity": "HIGH",
+    "parent": "line con 0",
+    "search_command": "exec-timeout [1-9]",
+    "expected": "present",
+    "fix": "Sous line con 0, appliquer: exec-timeout 5 0"
+  },
+  {
+    "id": "CIS-4.1",
+    "name": "Interdiction de la version obsolète de SSH (Version 1)",
+    "category": "Management",
+    "level": 2,
+    "severity": "HIGH",
+    "parent": "",
+    "search_command": "ip ssh version 1",
+    "expected": "absent",
+    "fix": "Appliquer en mode global: ip ssh version 2"
+  },
+  {
+    "id": "CIS-4.2",
+    "name": "Forcer l'authentification SSH locale avec mot de passe",
+    "category": "Authentication",
+    "level": 1,
+    "severity": "HIGH",
+    "parent": "line vty",
+    "search_command": "login local",
+    "expected": "present",
+    "fix": "Sous line vty, ajouter la commande: login local"
+  },
+  {
+    "id": "CIS-5.1",
+    "name": "Désactivation du protocole non sécurisé CDP globalement",
+    "category": "Protocols",
+    "level": 1,
+    "severity": "LOW",
+    "parent": "",
+    "search_command": "no cdp run",
+    "expected": "present",
+    "fix": "Appliquer en mode global: no cdp run"
+  },
+  {
+    "id": "CIS-5.2",
+    "name": "Désactivation du service Finger (Divulgation d'infos)",
+    "category": "Services",
+    "level": 1,
+    "severity": "LOW",
+    "parent": "",
+    "search_command": "ip finger",
+    "expected": "absent",
+    "fix": "Appliquer en mode global: no ip finger"
+  }
 ]
