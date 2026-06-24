@@ -1,7 +1,7 @@
 import json
 import os
 import re
-import logging  #  On importe le module de logs
+import logging  # On importe le module de logs
 from ciscoconfparse import CiscoConfParse
 
 # Configuration du sous-logger pour ce module spécifique
@@ -27,8 +27,7 @@ def search_command_label(parent, child):
     return f"{parent} -> {child}" if parent else child
 
 def analyze_configuration(device_name, config_text):
-    """Analyse la configuration avec support Parent/Enfant et ID CIS."""
-    # Remplacement du premier print par un logger.info
+    """Analyse la configuration avec support Parent/Enfant, ID CIS et Regex."""
     logger.info(f"Analyse de sécurité CIS en cours pour l'équipement : {device_name}")
     
     parse = CiscoConfParse(config_text.splitlines())
@@ -45,12 +44,14 @@ def analyze_configuration(device_name, config_text):
 
         # CAS 1 : Règle hiérarchique Parent / Enfant (Ex: line vty)
         if parent_cmd:
+            # Le parent reste échappé car c'est une commande fixe (ex: ^line vty)
             parents = parse.find_objects(f"^{re.escape(parent_cmd)}")
             
-            # Si on attend que la commande soit ABSENTE (ex: telnet)
+            # Si on attend que la commande soit ABSENTE (ex: transport input telnet)
             if expected == "absent":
                 for parent in parents:
-                    children = parent.re_search_children(f"{re.escape(search_cmd)}")
+                    # 💡 Pas de re.escape ici pour permettre l'évaluation de la regex du JSON
+                    children = parent.re_search_children(f"{search_cmd}")
                     if children:
                         is_vulnerable = True
                         break
@@ -60,24 +61,28 @@ def analyze_configuration(device_name, config_text):
                 if not parents:
                     is_vulnerable = True
                 for parent in parents:
-                    children = parent.re_search_children(f"{re.escape(search_cmd)}")
+                    # 💡 Pas de re.escape ici non plus
+                    children = parent.re_search_children(f"{search_cmd}")
                     if not children:
                         is_vulnerable = True
 
         # CAS 2 : Commande globale (Ex: ip http server)
         else:
-            found = parse.find_objects(f"^{re.escape(search_cmd)}")
+            # 💡 On retire re.escape pour que "ip ssh version 1" ou d'autres regex fonctionnent globalement
+            found = parse.find_objects(f"^{search_cmd}")
             if expected == "absent" and found:
                 is_vulnerable = True
             elif expected == "present" and not found:
                 is_vulnerable = True
 
-        # Si une vulnérabilité est détectée, on l'ajoute avec son ID
+        # Si une vulnérabilité est détectée, on l'ajoute avec ses métadonnées d'expert
         if is_vulnerable:
             logger.warning(f"[{rule_id}] Faille détectée sur {device_name} -> {rule['name']}")
             vulnerabilities.append({
                 "id": rule_id,
                 "issue": f"[{rule_id}] {rule['name']}",
+                "category": rule.get("category", "Général"),  #  Ajout de la catégorie
+                "level": rule.get("level", 1),                # Ajout du niveau CIS (1 ou 2)
                 "severity": rule["severity"],
                 "details": f"Violation détectée pour '{search_command_label(parent_cmd, search_cmd)}'",
                 "fix": rule["fix"]
