@@ -82,15 +82,15 @@ def analyze_configuration(device_name, config_text):
                 "id": rule_id,
                 "issue": f"[{rule_id}] {rule['name']}",
                 "category": rule.get("category", "Général"),  #  Ajout de la catégorie
-                "level": rule.get("level", 1),                # Ajout du niveau CIS (1 ou 2)
+                "level": rule.get("level", 1),                #  Ajout du niveau CIS (1 ou 2)
                 "severity": rule["severity"],
                 "details": f"Violation détectée pour '{search_command_label(parent_cmd, search_cmd)}'",
                 "fix": rule["fix"]
             })
 
-    # Remplacement du bilan final par des logs structurés
+    #  Correction du niveau de log : WARNING au lieu d'ERROR pour un résultat d'audit normal avec failles
     if vulnerabilities:
-        logger.error(f"Analyse terminée. {len(vulnerabilities)} vulnérabilité(s) CIS détectée(s) sur {device_name} !")
+        logger.warning(f"Analyse terminée. {len(vulnerabilities)} vulnérabilité(s) CIS détectée(s) sur {device_name} !")
     else:
         logger.info(f"Analyse terminée. Aucun écart de conformité CIS détecté sur {device_name}.")
 
