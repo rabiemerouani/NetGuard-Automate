@@ -1,6 +1,6 @@
 import os
 import smtplib
-import logging  #  On importe le module de logs
+import logging  # On importe le module de logs
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Charger les variables du fichier .env au démarrage du script
 load_dotenv()
 
-#  Configuration du sous-logger pour le module de notification
+# Configuration du sous-logger pour le module de notification
 logger = logging.getLogger("NetGuard." + __name__)
 
 def send_security_alert(device_name, vulnerabilities):
@@ -30,28 +30,30 @@ def send_security_alert(device_name, vulnerabilities):
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg['Subject'] = f" ALERTE SÉCURITÉ : Faille détectée sur {device_name}"
+    msg['Subject'] = f"🚨 ALERTE SÉCURITÉ : Non-conformités CIS détectées sur {device_name}"
 
-    # ✍️ 2. Construction du corps du texte de l'e-mail
-    body = f"Salut,\n\n"
-    body += f"Un audit de sécurité automatique a été effectué sur l'équipement : {device_name}\n"
-    body += f"Status : ATTENTION - Des failles de sécurité ont été trouvées.\n"
-    body += "============================================================\n\n"
+    # ✍️ 2. Construction du corps du texte de l'e-mail (Format Expert)
+    body = f"Bonjour,\n\n"
+    body += f"Un audit de sécurité automatique basé sur les benchmarks CIS a été effectué sur l'équipement : {device_name}\n"
+    body += f"Statut : ATTENTION - {len(vulnerabilities)} écart(s) de conformité détecté(s).\n"
+    body += "======================================================================\n\n"
 
     for vuln in vulnerabilities:
         body += f"[{vuln['severity']}] {vuln['issue']}\n"
-        body += f"   Détails : {vuln['details']}\n"
-        body += f"   Correction suggérée : {vuln['fix']}\n"
-        body += "----------------------------------------\n"
+        body += f"    Catégorie : {vuln['category']}\n"
+        body += f"    Niveau CIS : Level {vuln['level']}\n"
+        body += f"    Détails    : {vuln['details']}\n"
+        body += f"    Remédiation: {vuln['fix']}\n"
+        body += "----------------------------------------------------------------------\n"
 
-    body += f"\nMerci de traiter ces vulnérabilités dès que possible.\n"
+    body += f"\nMerci de traiter ces vulnérabilités dès que possible pour durcir l'infrastructure.\n\n"
     body += f"Cordialement,\n"
-    body += f"Votre robot de supervision NetGuard."
+    body += f"NetGuard Automation Suite."
 
     # Attacher le texte à l'objet e-mail
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-    #  3. Connexion au serveur de Google et envoi réel
+    # 3. Connexion au serveur de Google et envoi réel
     try:
         logger.debug("[SMTP] Connexion au serveur smtp.gmail.com sur le port 587...")
         server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -67,4 +69,4 @@ def send_security_alert(device_name, vulnerabilities):
         server.quit()
         
     except Exception as e:
-        logger.critical(f" [SMTP] Échec de l'envoi de l'e-mail. Erreur : {e}")
+        logger.critical(f"[SMTP] Échec de l'envoi de l'e-mail. Erreur : {e}")
