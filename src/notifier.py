@@ -1,72 +1,69 @@
 import os
 import smtplib
-import logging  # On importe le module de logs
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
-# Charger les variables du fichier .env au démarrage du script
 load_dotenv()
-
-# Configuration du sous-logger pour le module de notification
 logger = logging.getLogger("NetGuard." + __name__)
 
 def send_security_alert(device_name, vulnerabilities):
-    """Génère et envoie une alerte e-mail basée sur les vulnérabilités trouvées."""
+    """Generates and sends an email alert based on discovered CIS vulnerabilities."""
     
-    # Récupération des variables depuis le fichier .env
     sender_email = os.getenv("SMTP_SENDER")
     password = os.getenv("SMTP_PASSWORD")
     receiver_email = os.getenv("SMTP_RECEIVER")
 
-    # Vérification de sécurité : si une variable manque dans le .env, on arrête tout
     if not sender_email or not password or not receiver_email:
-        logger.error("[SMTP] Configuration SMTP incomplète dans le fichier .env")
+        logger.error("[SMTP] Incomplete SMTP configuration inside the .env file.")
         return
 
-    logger.info(f"[SMTP] Préparation de l'envoi de l'alerte pour {device_name}...")
+    # Only send an email if actual vulnerabilities are found
+    if not vulnerabilities:
+        logger.info(f"[SMTP] No compliance gaps found for {device_name}. Skipping email notification.")
+        return
+
+    logger.info(f"[SMTP] Preparing security alert dispatch for {device_name}...")
     
-    # 1. Création de l'e-mail (Structure de base)
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg['Subject'] = f"🚨 ALERTE SÉCURITÉ : Non-conformités CIS détectées sur {device_name}"
+    msg['Subject'] = f"SECURITY ALERT: CIS Non-Compliance Detected on {device_name}"
 
-    # ✍️ 2. Construction du corps du texte de l'e-mail (Format Expert)
-    body = f"Bonjour,\n\n"
-    body += f"Un audit de sécurité automatique basé sur les benchmarks CIS a été effectué sur l'équipement : {device_name}\n"
-    body += f"Statut : ATTENTION - {len(vulnerabilities)} écart(s) de conformité détecté(s).\n"
+    # Build the English compliance report body
+    body = f"Hello,\n\n"
+    body += f"An automated security configuration audit based on CIS Benchmarks was performed on: {device_name}\n"
+    body += f"Status: WARNING - {len(vulnerabilities)} compliance gap(s) identified.\n"
     body += "======================================================================\n\n"
 
     for vuln in vulnerabilities:
         body += f"[{vuln['severity']}] {vuln['issue']}\n"
-        body += f"    Catégorie : {vuln['category']}\n"
-        body += f"    Niveau CIS : Level {vuln['level']}\n"
-        body += f"    Détails    : {vuln['details']}\n"
-        body += f"    Remédiation: {vuln['fix']}\n"
+        body += f"    Category: {vuln['category']}\n"
+        body += f"    CIS Level: Level {vuln['level']}\n"
+        body += f"    Details  : {vuln['details']}\n"
+        body += f"    Remediation: {vuln['fix']}\n"
         body += "----------------------------------------------------------------------\n"
 
-    body += f"\nMerci de traiter ces vulnérabilités dès que possible pour durcir l'infrastructure.\n\n"
-    body += f"Cordialement,\n"
+    body += f"\nPlease remediate these vulnerabilities immediately to harden network infrastructure parameters.\n\n"
+    body += f"Regards,\n"
     body += f"NetGuard Automation Suite."
 
-    # Attacher le texte à l'objet e-mail
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
-    # 3. Connexion au serveur de Google et envoi réel
     try:
-        logger.debug("[SMTP] Connexion au serveur smtp.gmail.com sur le port 587...")
+        logger.debug("Connecting to smtp.gmail.com on port 587...")
         server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()  # Chiffrement de la connexion
+        server.starttls()
         
-        logger.debug("[SMTP] Authentification auprès du serveur Google...")
+        logger.debug("Authenticating with Google mail server gateway...")
         server.login(sender_email, password)
         
-        logger.info(f"[SMTP] Envoi de l'e-mail d'alerte à {receiver_email}...")
+        logger.info(f" Dispatching alert payload to {receiver_email}...")
         server.sendmail(sender_email, receiver_email, msg.as_string())
         
-        logger.info("[✔] [SMTP] E-mail d'alerte envoyé avec succès !")
+        logger.info(" Security alert email successfully dispatched!")
         server.quit()
         
     except Exception as e:
-        logger.critical(f"[SMTP] Échec de l'envoi de l'e-mail. Erreur : {e}")
+        logger.critical(f" Failed to send email alert. Error traceback: {e}")
