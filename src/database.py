@@ -42,3 +42,23 @@ cursor.execute("""
             FOREIGN KEY (audit_id) REFERENCES audits(id) ON DELETE CASCADE
         )
     """)
+
+conn.commit()
+conn.close()
+
+print("Database initialized successfully.")
+
+conn = get_connection()
+cursor = conn.cursor()
+
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+total_vulns = len(vulnerabilities)
+
+# 1. Insert the primary audit execution record
+cursor.execute(
+            """
+            INSERT INTO audits (device_name, device_ip, execution_date, total_vulnerabilities)
+            VALUES (?, ?, ?, ?)
+            """,
+            (device_name, device_ip, current_time, total_vulns)
+        )
