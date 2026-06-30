@@ -50,7 +50,7 @@ def analyze_configuration(device_name, config_text):
             # Si on attend que la commande soit ABSENTE (ex: transport input telnet)
             if expected == "absent":
                 for parent in parents:
-                    # 💡 Pas de re.escape ici pour permettre l'évaluation de la regex du JSON
+                    #  Pas de re.escape ici pour permettre l'évaluation de la regex du JSON
                     children = parent.re_search_children(f"{search_cmd}")
                     if children:
                         is_vulnerable = True
@@ -61,14 +61,14 @@ def analyze_configuration(device_name, config_text):
                 if not parents:
                     is_vulnerable = True
                 for parent in parents:
-                    # 💡 Pas de re.escape ici non plus
+                    #  Pas de re.escape ici non plus
                     children = parent.re_search_children(f"{search_cmd}")
                     if not children:
                         is_vulnerable = True
 
         # CAS 2 : Commande globale (Ex: ip http server)
         else:
-            # 💡 On retire re.escape pour que "ip ssh version 1" ou d'autres regex fonctionnent globalement
+            #  On retire re.escape pour que "ip ssh version 1" ou d'autres regex fonctionnent globalement
             found = parse.find_objects(f"^{search_cmd}")
             if expected == "absent" and found:
                 is_vulnerable = True
