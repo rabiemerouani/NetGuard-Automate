@@ -24,7 +24,7 @@
   {
     "id": "CIS-2.1",
     "name": "Chiffrement global des mots de passe",
-    "category": "Authentication",
+    "category": "Authentification",
     "level": 1,
     "severity": "HIGH",
     "parent": "",
@@ -35,10 +35,11 @@
   {
     "id": "CIS-3.1",
     "name": "Interdiction du protocole non chiffré Telnet (VTY)",
-    "category": "Management",
+    "category": "Gestion",
     "level": 1,
     "severity": "CRITICAL",
     "parent": "line vty",
+    "is_regex": true,
     "search_command": "transport input.*telnet",
     "expected": "absent",
     "fix": "Sous line vty, appliquer: transport input ssh"
@@ -46,10 +47,11 @@
   {
     "id": "CIS-3.2",
     "name": "Configuration d'un timeout de déconnexion VTY valide (Pas de 0 0)",
-    "category": "Management",
+    "category": "Gestion",
     "level": 1,
     "severity": "HIGH",
     "parent": "line vty",
+    "is_regex": true,
     "search_command": "exec-timeout [1-9]",
     "expected": "present",
     "fix": "Sous line vty, appliquer: exec-timeout 5 0"
@@ -57,10 +59,11 @@
   {
     "id": "CIS-3.3",
     "name": "Configuration d'un timeout de déconnexion Console valide (Pas de 0 0)",
-    "category": "Management",
+    "category": "Gestion",
     "level": 1,
     "severity": "HIGH",
     "parent": "line con 0",
+    "is_regex": true,
     "search_command": "exec-timeout [1-9]",
     "expected": "present",
     "fix": "Sous line con 0, appliquer: exec-timeout 5 0"
@@ -68,7 +71,7 @@
   {
     "id": "CIS-4.1",
     "name": "Interdiction de la version obsolète de SSH (Version 1)",
-    "category": "Management",
+    "category": "Gestion",
     "level": 2,
     "severity": "HIGH",
     "parent": "",
@@ -79,7 +82,7 @@
   {
     "id": "CIS-4.2",
     "name": "Forcer l'authentification SSH locale avec mot de passe",
-    "category": "Authentication",
+    "category": "Authentification",
     "level": 1,
     "severity": "HIGH",
     "parent": "line vty",
@@ -90,7 +93,7 @@
   {
     "id": "CIS-5.1",
     "name": "Désactivation du protocole non sécurisé CDP globalement",
-    "category": "Protocols",
+    "category": "Protocoles",
     "level": 1,
     "severity": "LOW",
     "parent": "",
