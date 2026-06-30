@@ -12,7 +12,16 @@ def init_db():
     """Initializes the database schema by creating the necessary tables if they do not exist."""
     conn = get_connection()
     cursor = conn.cursor()
-    
 
 
 
+cursor.execute("""
+               
+CREATE TABLE IF NOT EXISTS audits (
+               id INTEGER PRIMERY KEY AUTOINCREMENT,
+               device_name TEXT NOT NULL,
+               device_ip TEXT NOT NULL,
+               execution_dater TEXT NOT NULL,
+               total_vulnerabilities INTEGER NOT NULL
+               )
+                """)
