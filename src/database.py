@@ -25,3 +25,20 @@ CREATE TABLE IF NOT EXISTS audits (
                total_vulnerabilities INTEGER NOT NULL
                )
                 """)
+
+
+cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vulnerabilities (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audit_id INTEGER NOT NULL,
+            rule_id TEXT NOT NULL,
+            issue TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            category TEXT NOT NULL,
+            level INTEGER NOT NULL,
+            details TEXT NOT NULL,
+            fix TEXT NOT NULL,
+            locations TEXT,
+            FOREIGN KEY (audit_id) REFERENCES audits(id) ON DELETE CASCADE
+        )
+    """)
