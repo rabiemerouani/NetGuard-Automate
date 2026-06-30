@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetGuard-Automate | CIS Security Auditor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <h2>NetGuard<span>Automate</span></h2>
+                <small>CIS Compliance Engine</small>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="#audit-section" class="sidebar-nav__link sidebar-nav__link--active" id="nav-launch-audit">
+                            <span>🚀</span> Launch New Audit
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#history-section" class="sidebar-nav__link" id="nav-view-history">
+                            <span>📜</span> Audit History Logs
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="app-content">
+            
+            <header class="workspace-header">
+                <div class="workspace-header__title">
+                    <h1>Network Security Auditing Dashboard</h1>
+                    <p>Automated Cisco IOS Configuration Analyzer via CIS Benchmarks</p>
+                </div>
+                <div class="status-badge" id="api-status-indicator">
+                    <span class="status-badge__dot"></span> API: Checking Connection...
+                </div>
+            </header>
+
+            <hr>
+
+            <section id="audit-section">
+                <div class="workspace-section__title">
+                    <h2>Execute Configuration Scan</h2>
+                    <p>Input target infrastructure details and device configuration blocks below.</p>
+                </div>
+
+                <form id="audit-submission-form" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="device-name-input">Device Hostname / Identification</label>
+                            <input 
+                                type="text" 
+                                id="device-name-input" 
+                                placeholder="e.g., Core_Router_Ain_Taya" 
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="device-ip-input">Target IP Address</label>
+                            <input 
+                                type="text" 
+                                id="device-ip-input" 
+                                placeholder="e.g., 192.168.1.1" 
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group form-group--margin">
+                        <label for="router-config-textarea">Raw Cisco IOS Configuration File Contents</label>
+                        <textarea 
+                            id="router-config-textarea" 
+                            rows="12" 
+                            placeholder="Paste your raw router configuration lines here... (e.g., line vty 0 4, no ip redirects)" 
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="run-audit-btn" class="btn btn--primary">
+                            <span>⚡</span> Run Automated Audit
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="results-section" class="hidden">
+                <hr>
+                <div class="results-card">
+                    <div class="results-card__title">
+                        <h2>Audit Assessment Results: <span id="res-target-device">None</span></h2>
+                        <p>Target Node IP Address: <span id="res-target-ip">0.0.0.0</span></p>
+                    </div>
+                    <div class="risk-counter">
+                        <div class="risk-counter__badge" id="res-total-violations">0</div>
+                        <p>Vulnerabilities</p>
+                    </div>
+                </div>
+
+                <div class="workspace-section__title">
+                    <h3>Detailed Security Findings</h3>
+                </div>
+                
+                <div id="vulnerabilities-output-list">
+                    </div>
+            </section>
+
+            <hr>
+
+            <section id="history-section">
+                <div class="workspace-header">
+                    <div class="workspace-header__title">
+                        <h2>Historical Audit Metrics Logs</h2>
+                        <p>Persistent historical analysis records pulled directly from SQLite database storage.</p>
+                    </div>
+                    <button type="button" id="refresh-history-btn" class="btn btn--secondary">
+                        <span>🔄</span> Refresh Logs From DB
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table" id="audit-history-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Execution Date/Time</th>
+                                <th scope="col">Device Name</th>
+                                <th scope="col">IP Address</th>
+                                <th scope="col">Violations Caught</th>
+                                <th scope="col" style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <tr>
+                                <td colspan="6" class="table-placeholder">Click 'Refresh Logs' to load historical database audits...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 NetGuard-Automate Pro • Developed for M1 RSD Enterprise Audit Security</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
