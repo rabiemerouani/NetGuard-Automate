@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from src.analyzer import analyze_configuration 
 from src.database import init_db, save_audit_result, get_all_audits, get_audit_with_vulnerabilities
+from src.notifier import send_security_alert
 
 # 1. Define the Modern Application Lifespan Context Manager
 @asynccontextmanager
@@ -27,12 +28,12 @@ class AuditRequest(BaseModel):
     device_ip: str
     router_config: str
 
-# New Dedicated API Status Route (This avoids HTML conflicts!)
+# New Dedicated API Status Route
 @app.get("/api/status")
 def read_status():
     return {"status": "ok", "message": "NetGuard API is running"}
 
-# POST Route: Processes configuration and logs findings
+# POST Route: Processes configuration, logs findings, and fires SMTP alerts
 @app.post("/api/audit")
 def run_audit(payload: AuditRequest):
     try:
@@ -43,8 +44,20 @@ def run_audit(payload: AuditRequest):
         if not payload.router_config.strip():
             raise HTTPException(status_code=400, detail="Router configuration cannot be empty.")
         
+        # 1. Analyze configuration using CIS Rules
         results = analyze_configuration(payload.device_name, payload.router_config)
+        
+        # 2. Persist audit findings into SQLite
         audit_id = save_audit_result(payload.device_name, payload.device_ip, results)
+        
+        # 🚀 3. TRIGGER SMTP ALERTS
+        # This will securely connect to Gmail and send the English summary report out!
+        try:
+            send_security_alert(payload.device_name, results)
+        except Exception as mail_err:
+            # We catch the email exception here so that even if SMTP fails (like bad credentials), 
+            # your web UI still gets the audit results smoothly without crashing!
+            print(f"[SMTP CRITICAL ERROR] Notification routine failed: {mail_err}")
         
         return {
             "success": True,
@@ -88,6 +101,5 @@ def fetch_single_audit(audit_id: int):
         raise http_err
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal query failure: {str(e)}")
-
 
 app.mount("/", StaticFiles(directory="src", html=True), name="static")

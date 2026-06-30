@@ -1,34 +1,34 @@
 import json
 import os
 import re
-import logging  # On importe le module de logs
+import logging
 from ciscoconfparse import CiscoConfParse
 
-# Configuration du sous-logger pour ce module spécifique
+# Configure the sub-logger for this specific module
 logger = logging.getLogger("NetGuard." + __name__)
 
 def load_security_rules():
-    """Charge les règles de sécurité CIS depuis le fichier JSON."""
+    """Loads CIS security rules from the JSON configuration file."""
     rules_path = os.path.join("config", "rules.json")
     if os.path.exists(rules_path):
         try:
             with open(rules_path, "r", encoding="utf-8") as file:
                 rules = json.load(file)
-                logger.debug(f"Chargement réussi de {len(rules)} règles CIS depuis {rules_path}")
+                logger.debug(f"Successfully loaded {len(rules)} CIS rules from {rules_path}")
                 return rules
         except Exception as e:
-            logger.error(f"Erreur lors de la lecture du fichier de règles JSON : {e}")
+            logger.error(f"Error reading JSON rules file: {e}")
             return []
-    logger.warning(f"Le fichier de règles est introuvable au chemin : {rules_path}")
+    logger.warning(f"Rules configuration file not found at: {rules_path}")
     return []
 
 def search_command_label(parent, child):
-    """Formate proprement l'affichage du chemin de la commande."""
+    """Cleanly formats the command path display."""
     return f"{parent} -> {child}" if parent else child
 
 def analyze_configuration(device_name, config_text):
-    """Analyse la configuration avec support Parent/Enfant, ID CIS et Regex."""
-    logger.info(f"Analyse de sécurité CIS en cours pour l'équipement : {device_name}")
+    """Analyzes the configuration text using Parent/Child relationships, CIS IDs, and Regex matching."""
+    logger.info(f"Starting CIS security compliance audit for device: {device_name}")
     
     parse = CiscoConfParse(config_text.splitlines())
     rules = load_security_rules()
@@ -42,56 +42,51 @@ def analyze_configuration(device_name, config_text):
         
         is_vulnerable = False
 
-        # CAS 1 : Règle hiérarchique Parent / Enfant (Ex: line vty)
+        # CASE 1: Hierarchical Parent / Child Rules (e.g., line vty)
         if parent_cmd:
-            # Le parent reste échappé car c'est une commande fixe (ex: ^line vty)
             parents = parse.find_objects(f"^{re.escape(parent_cmd)}")
             
-            # Si on attend que la commande soit ABSENTE (ex: transport input telnet)
+            # If we expect the command to be ABSENT
             if expected == "absent":
                 for parent in parents:
-                    #  Pas de re.escape ici pour permettre l'évaluation de la regex du JSON
                     children = parent.re_search_children(f"{search_cmd}")
                     if children:
                         is_vulnerable = True
                         break
             
-            # Si on attend que la commande soit PRÉSENTE partout (ex: un timeout obligatoire)
+            # If we expect the command to be PRESENT everywhere
             elif expected == "present":
                 if not parents:
                     is_vulnerable = True
                 for parent in parents:
-                    #  Pas de re.escape ici non plus
                     children = parent.re_search_children(f"{search_cmd}")
                     if not children:
                         is_vulnerable = True
 
-        # CAS 2 : Commande globale (Ex: ip http server)
+        # CASE 2: Global Commands (e.g., ip http server)
         else:
-            #  On retire re.escape pour que "ip ssh version 1" ou d'autres regex fonctionnent globalement
             found = parse.find_objects(f"^{search_cmd}")
             if expected == "absent" and found:
                 is_vulnerable = True
             elif expected == "present" and not found:
                 is_vulnerable = True
 
-        # Si une vulnérabilité est détectée, on l'ajoute avec ses métadonnées d'expert
+        # If a vulnerability is matched, append it with standard English metadata properties
         if is_vulnerable:
-            logger.warning(f"[{rule_id}] Faille détectée sur {device_name} -> {rule['name']}")
+            logger.warning(f"[{rule_id}] Gap detected on {device_name} -> {rule['name']}")
             vulnerabilities.append({
                 "id": rule_id,
                 "issue": f"[{rule_id}] {rule['name']}",
-                "category": rule.get("category", "Général"),  #  Ajout de la catégorie
-                "level": rule.get("level", 1),                #  Ajout du niveau CIS (1 ou 2)
+                "category": rule.get("category", "General"),
+                "level": rule.get("level", 1),
                 "severity": rule["severity"],
-                "details": f"Violation détectée pour '{search_command_label(parent_cmd, search_cmd)}'",
+                "details": f"Violation detected for '{search_command_label(parent_cmd, search_cmd)}'",
                 "fix": rule["fix"]
             })
 
-    #  Correction du niveau de log : WARNING au lieu d'ERROR pour un résultat d'audit normal avec failles
     if vulnerabilities:
-        logger.warning(f"Analyse terminée. {len(vulnerabilities)} vulnérabilité(s) CIS détectée(s) sur {device_name} !")
+        logger.warning(f"Audit complete. {len(vulnerabilities)} CIS vulnerability/vulnerabilities flag(s) identified on {device_name}!")
     else:
-        logger.info(f"Analyse terminée. Aucun écart de conformité CIS détecté sur {device_name}.")
+        logger.info(f"Audit complete. No CIS compliance deviations detected on {device_name}.")
 
     return vulnerabilities
