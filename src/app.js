@@ -1,10 +1,10 @@
 import { checkBackendHealth, postAuditConfiguration, fetchAuditHistoryLogs, fetchAuditDetailsById } from "./api.js";
 import { updateApiStatus, renderAuditResults, renderHistoryTable } from "./ui.js";
 
-const auditForm = document.getElementById("audit-submission-form");
-const runAuditBtn = document.getElementById("run-audit-btn");
+const auditForm        = document.getElementById("audit-submission-form");
+const runAuditBtn       = document.getElementById("run-audit-btn");
 const refreshHistoryBtn = document.getElementById("refresh-history-btn");
-const historyTableBody = document.getElementById("history-table-body");
+const historyTableBody  = document.getElementById("history-table-body");
 
 async function bootstrap() {
     const isAlive = await checkBackendHealth();
@@ -17,7 +17,6 @@ async function bootstrap() {
 async function reloadHistoryLogData() {
     try {
         const response = await fetchAuditHistoryLogs();
-        // Extract array if backend uses standard data wrapper envelope
         const historyData = response.success ? response.data : response;
         renderHistoryTable(historyData);
     } catch (err) {
@@ -27,21 +26,27 @@ async function reloadHistoryLogData() {
 
 auditForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const nameInput = document.getElementById("device-name-input").value.trim();
-    const ipInput = document.getElementById("device-ip-input").value.trim();
+
+    const nameInput   = document.getElementById("device-name-input").value.trim();
+    const ipInput     = document.getElementById("device-ip-input").value.trim();
     const configInput = document.getElementById("router-config-textarea").value.trim();
 
-    if (!nameInput || !ipInput || !configInput) return;
+    // Field validation with clean English feedback
+    if (!nameInput || !ipInput || !configInput) {
+        alert("Please fill in all required fields: Device Name, IP Address, and Configuration.");
+        return;
+    }
 
     try {
         runAuditBtn.disabled = true;
         runAuditBtn.innerHTML = "⏳ Analyzing Configuration...";
-        
+
         const response = await postAuditConfiguration(nameInput, ipInput, configInput);
         const resultPayload = response.success ? response.data : response;
-        
+
         renderAuditResults(resultPayload);
         await reloadHistoryLogData();
+
     } catch (error) {
         alert(`Audit Execution Failed: ${error.message}`);
     } finally {
@@ -65,7 +70,7 @@ historyTableBody.addEventListener("click", async (e) => {
     }
 });
 
-// Register console testing hook cleanly without crashing module pipeline
+// Register console testing hook cleanly for development troubleshooting
 window.apiDebug = { checkHealth: checkBackendHealth, runAudit: postAuditConfiguration, getHistory: fetchAuditHistoryLogs };
 
 document.addEventListener("DOMContentLoaded", bootstrap);
