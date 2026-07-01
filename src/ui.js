@@ -1,5 +1,11 @@
 const indicator = document.getElementById("api-status-indicator");
 
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+}
+
 export function updateApiStatus(isConnected) {
     if (!indicator) return;
     
@@ -37,15 +43,17 @@ export function renderAuditResults(auditData) {
         const severityClass = (finding.severity || "medium").toLowerCase();
         const card = document.createElement("div");
         card.className = `finding-card finding-card--${severityClass}`;
+        
+        // Secured using escapeHtml wrapper variables
         card.innerHTML = `
             <div class="finding-card__header">
-                <span class="finding-card__id">${finding.id}</span>
-                <span class="finding-card__severity finding-card__severity--${severityClass}">${finding.severity}</span>
+                <span class="finding-card__id">${escapeHtml(finding.id)}</span>
+                <span class="finding-card__severity finding-card__severity--${severityClass}">${escapeHtml(finding.severity)}</span>
             </div>
             <div class="finding-card__body">
-                <strong>${finding.issue}</strong>
-                <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #475569;">${finding.details}</p>
-                <code># Remediation Fix:\n${finding.fix}</code>
+                <strong>${escapeHtml(finding.issue)}</strong>
+                <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #475569;">${escapeHtml(finding.details)}</p>
+                <code># Remediation Fix:\n${escapeHtml(finding.fix)}</code>
             </div>
         `;
         listContainer.appendChild(card);
@@ -62,13 +70,13 @@ export function renderHistoryTable(historyArray) {
     }
     tbody.innerHTML = historyArray.map(row => `
         <tr>
-            <td><strong>#${row.id}</strong></td>
-            <td>${row.execution_date || "N/A"}</td>
-            <td>${row.device_name}</td>
-            <td><code>${row.device_ip}</code></td>
-            <td><span class="status-badge" style="border-color: var(--color-danger); color: var(--color-danger); font-size: 0.8rem; padding: 0.2rem 0.6rem;">${row.total_vulnerabilities} Risks</span></td>
+            <td><strong>#${escapeHtml(row.id)}</strong></td>
+            <td>${escapeHtml(row.execution_date || "N/A")}</td>
+            <td>${escapeHtml(row.device_name)}</td>
+            <td><code>${escapeHtml(row.device_ip)}</code></td>
+            <td><span class="status-badge" style="border-color: var(--color-danger); color: var(--color-danger); font-size: 0.8rem; padding: 0.2rem 0.6rem;">${escapeHtml(row.total_vulnerabilities)} Risks</span></td>
             <td style="text-align: center;">
-                <button type="button" class="btn btn--secondary view-details-btn" data-id="${row.id}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                <button type="button" class="btn btn--secondary view-details-btn" data-id="${escapeHtml(row.id)}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
                      View Report
                 </button>
             </td>
