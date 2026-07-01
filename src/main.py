@@ -6,7 +6,7 @@ from src.analyzer import analyze_configuration
 from src.database import init_db, save_audit_result, get_all_audits, get_audit_with_vulnerabilities
 from src.notifier import send_security_alert
 
-# 1. Define the Modern Application Lifespan Context Manager
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER] FastAPI infrastructure booting up...")
@@ -50,7 +50,7 @@ def run_audit(payload: AuditRequest):
         # 2. Persist audit findings into SQLite
         audit_id = save_audit_result(payload.device_name, payload.device_ip, results)
         
-        # 🚀 3. TRIGGER SMTP ALERTS
+        #  3. TRIGGER SMTP ALERTS
         # This will securely connect to Gmail and send the English summary report out!
         try:
             send_security_alert(payload.device_name, results)
